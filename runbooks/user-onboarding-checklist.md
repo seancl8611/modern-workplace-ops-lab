@@ -1,7 +1,7 @@
 # User Onboarding Checklist (Ops)
 
 ## Before
-- Confirm department group exists: SG-IT, SG-Engineering, SG-Sales, SG-Finance
+- Confirm department group exists: SG-Engineering, SG-Sales, SG-Finance
 - Confirm baseline groups exist: SG-All-Employees, SG-MFA-Required
 - Confirm group-based licensing configured on SG-All-Employees
 

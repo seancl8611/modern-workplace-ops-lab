@@ -24,7 +24,7 @@ param(
     [string]$DisplayName,
 
     [Parameter(Mandatory)]
-    [ValidateSet("IT", "Engineering", "Sales", "Finance")]
+    [ValidateSet("Engineering", "Sales", "Finance")]
     [string]$Department,
 
     [Parameter(Mandatory)]
