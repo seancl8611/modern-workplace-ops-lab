@@ -1,95 +1,99 @@
-# Modern Workplace & Identity Ops Lab (Microsoft 365 / Entra ID / Intune)
+# Modern Workplace & Identity Ops Lab (ContosoOpsLab)
 
-A hands-on lab that simulates day-to-day Microsoft 365 identity + endpoint operations for a small organization. Built to demonstrate practical skills in **Entra ID (Conditional Access, groups, RBAC)**, **Intune (enrollment, compliance, configuration, app deployment)**, **monitoring**, and **PowerShell automation (Microsoft Graph)**.
+## Overview
+A hands-on lab that simulates real-world Microsoft 365 identity + endpoint operations for a small organization. Built to demonstrate day‑one skills for junior SysAdmin / Cloud Ops roles: Entra ID identity administration, Conditional Access security baselines, Intune endpoint management, monitoring, and PowerShell automation.
 
----
+## Environment
+- **Tenant:** Microsoft 365 Developer tenant (E5 Developer / equivalent SKU)
+- **Identity:** Microsoft Entra ID (Entra admin center)
+- **Endpoint management:** Microsoft Intune admin center
+- **Endpoints:** 2x Windows 11 Enterprise Evaluation VMs (VirtualBox on Windows 11 Home)
+- **Users:** Department-based users + security groups; dynamic group for “all staff”
+- **Security:** Conditional Access (MFA, legacy auth block, compliant device for finance), break-glass accounts
+- **Automation:** Microsoft Graph PowerShell SDK scripts for onboarding and reporting
 
-## Architecture (1-page overview)
-![Architecture](docs/diagrams/architecture.svg)
+## Architecture
+![Architecture Diagram](docs/diagrams/architecture.png)
 
----
+**Core design pattern used throughout:**
+1. **Users → Groups** (department + baseline groups)
+2. **Groups → Licenses / CA targeting / Intune targeting**
+3. **Policies → Compliance evaluation → Remediation (drift detection + auto-fix)**
 
-## Quick proof (clickable)
-- **Licenses available**: [`01-tenant-licenses.png`](docs/screenshots/01-tenant-licenses.png)
-- **Devices enrolled in Intune**: [`11-enrolled-devices.png`](docs/screenshots/11-enrolled-devices.png)
-- **Win32 app deployment (7-Zip) + reporting**: [`16-app-deployment.png`](docs/screenshots/16-app-deployment.png)
-- **Proactive Remediation evidence (Firewall drift detection/remediation)**: [`26-remediation-status.png`](docs/screenshots/26-remediation-status.png)
+## What I Built
 
----
+### Identity & Access (Entra ID)
+- Created **security groups** used for licensing, policy targeting, and segmentation:
+  - SG-All-Employees, SG-IT-Admins, SG-Engineering, SG-Sales, SG-Finance
+  - SG-Intune-Devices (device targeting placeholder)
+  - SG-MFA-Required (Conditional Access targeting)
+- Created a **dynamic user group**:
+  - `SG-Dynamic-AllStaff` using rule:
+    - `(user.department -ne null) and (user.accountEnabled -eq true)`
+- Configured **least privilege** role assignment:
+  - Jordan Lee: **Intune Administrator**
+  - Standard users: **no admin roles**
+- Implemented **2 break-glass accounts** and documented a full runbook:
+  - `runbooks/break-glass-procedure.md`
 
-## What’s implemented
+### Security (Conditional Access)
+- **CA-001:** Require MFA for all users (group-targeted)
+- **CA-002:** Block legacy authentication clients
+- **CA-003:** Require compliant device for Finance apps (**Report-only** initially)
+- Created a temporary test policy during troubleshooting to generate a clear CA failure event:
+  - Example: `CA-TEST-001: Block Browser Sign-in (test)` (used to capture sign-in log evidence)
 
-### 1) Identity & Access (Entra ID)
-- Department and functional security groups (e.g., `SG-Engineering`, `SG-Finance`, `SG-MFA-Required`, `SG-All-Employees`)
-- Conditional Access baselines:
-  - **CA-001** Require MFA for users (scoped via groups)
-  - **CA-002** Block legacy authentication
-  - **CA-003** Require compliant device for Finance access (device compliance signal from Intune)
-- Break-glass emergency access accounts (2 accounts) with documented controls + exclusions from CA policies
+### Endpoint Management (Intune)
+- Configured **Automatic Enrollment** for Windows using **MDM user scope** targeting SG-All-Employees
+- Enrolled two Windows 11 VMs into Intune and verified:
+  - Devices appear under **Devices → All devices**
+- Compliance + configuration:
+  - **Compliance policy**: Windows baseline (password, firewall/defender, Secure Boot, BitLocker requirement noted)
+  - **Firewall hardening profile** (Settings catalog)
+  - **BitLocker profile**
+    - Note: VM/vTPM limitations may prevent full encryption enforcement; policy configuration still demonstrates the workflow
+  - **Windows Update rings**
+    - Implemented Standard ring; IT Pilot ring also created (staged rollout pattern)
+- App + script deployment:
+  - Packaged and deployed **7‑Zip** as a Win32 app
+  - Deployed a **PowerShell platform script** that writes a registry baseline key
+- **Proactive Remediation**:
+  - Deployed Detect/Remediate pair to detect firewall drift and auto-re-enable firewall
 
-**Runbook:** [`runbooks/break-glass-procedure.md`](runbooks/break-glass-procedure.md)
+### Monitoring & Troubleshooting
+- Created ticket-style investigation writeups:
+  - `docs/investigation-writeups.md`
+- Produced reporting screenshots (compliance summary, device configuration status, remediation status)
 
----
+### Automation (PowerShell + Microsoft Graph)
+- `scripts/New-UserOnboarding.ps1` — creates users and adds them to the required groups
+- `scripts/Get-ComplianceReport.ps1` — exports Intune device compliance to CSV
+- `scripts/Get-LicenseAudit.ps1` — audits license consumption and flags unlicensed users
+- `scripts/remediation/*` — proactive remediation scripts
+- See `scripts/README.md` for Graph scopes + production notes
 
-### 2) Endpoint Management (Intune)
-- Windows endpoints enrolled and managed by Intune (Windows 11 VMs)
-- Compliance policy baseline (password + Defender + firewall + platform requirements)
-- Configuration profiles:
-  - Firewall hardening profile
-  - BitLocker / device encryption policy (documented VM/TPM limitations where applicable)
-  - Update rings (pilot vs standard approach where applicable)
-- Application deployment:
-  - Win32 app (7-Zip packaged as `.intunewin`)
-  - PowerShell platform script (registry baseline marker)
+## Implementation Notes (Accuracy / Deviations from Original Plan)
+This lab followed a “build guide” plan, but a few practical adjustments were made during implementation:
 
----
+- **Virtualization:** Host OS is **Windows 11 Home**, so **Hyper‑V was not available**. Endpoints were built using **Oracle VirtualBox** instead.
+- **Windows ISO / OOBE:** Windows 11 Enterprise Evaluation ISO was used for VM installs. Some VM boot issues occurred when disk space was low or the ISO path changed; resolved by restoring the ISO and freeing disk space.
+- **Licensing:** Licenses were initially assigned per-user during user creation, then the lab standardized on **group-based licensing** via `SG-All-Employees`.
+- **BitLocker encryption settings:** “XTS‑AES 256” selection was not presented in the minimal BitLocker CSP picker. Encryption method settings were configured under Administrative Templates BitLocker settings where available. VM/vTPM limitations were documented.
+- **Update ring conflicts:** A conflict can appear if both “Standard” and “IT Pilot” rings target the same device. The intended approach is staged rollout targeting (Pilot → SG‑IT‑Admins, Standard → SG‑All‑Employees) with no overlap.
+- **Conditional Access evidence:** Some client-app scenarios did not reliably generate the intended CA failure evidence in logs. A dedicated **CA test policy** was temporarily used to produce an unambiguous blocked sign-in event for documentation.
+- **Remediation scheduling:** Proactive Remediation reporting and execution cadence can lag in the portal. Evidence was captured once device status populated and “issue fixed/without issues” states appeared.
 
-### 3) Automated operations control (Proactive Remediations)
-Implements a full “detect → remediate → report” loop:
-- Detection: checks if any firewall profile is disabled
-- Remediation: re-enables firewall profiles and validates
-- Intune reporting provides device status and last run outcomes
+## Repo Contents
+- `docs/screenshots/` — evidence screenshots (names align to the build steps)
+- `docs/investigation-writeups.md` — incident-style investigations
+- `runbooks/` — operational procedures (break-glass + troubleshooting)
+- `scripts/` — automation scripts and permissions notes
+- `scripts/remediation/` — proactive remediation scripts
 
-Scripts:
-- [`scripts/remediation/Detect-FirewallDrift.ps1`](scripts/remediation/Detect-FirewallDrift.ps1)
-- [`scripts/remediation/Remediate-FirewallDrift.ps1`](scripts/remediation/Remediate-FirewallDrift.ps1)
-
----
-
-### 4) Monitoring & troubleshooting write-ups
-Ticket-style incident documentation demonstrating investigation workflow:
-- Identity / Conditional Access sign-in issue
-- Endpoint app deployment troubleshooting scenario
-- Enrollment / device management troubleshooting scenario
-
-**Write-ups:** [`docs/investigation-writeups.md`](docs/investigation-writeups.md)
-
----
-
-### 5) PowerShell automation (Microsoft Graph)
-Automation scripts used for identity + ops reporting:
-- [`scripts/New-UserOnboarding.ps1`](scripts/New-UserOnboarding.ps1) — creates user, assigns groups (department + all employees + MFA-required)
-- [`scripts/Get-ComplianceReport.ps1`](scripts/Get-ComplianceReport.ps1) — exports device compliance state to CSV
-- [`scripts/Get-LicenseAudit.ps1`](scripts/Get-LicenseAudit.ps1) — audits license pool + flags unlicensed users
-- Graph scopes + production notes: [`scripts/README.md`](scripts/README.md)
-
----
-
-## Notes on implementation (differences vs “ideal” production)
-- **Lab tenant licensing**: implemented using available tenant licensing (see screenshot proof).  
-- **Endpoints**: Windows 11 endpoints are **VirtualBox VMs** enrolled into Intune (realistic for lab validation).
-- **BitLocker / encryption**: VM hardware/TPM limitations may affect whether encryption fully enables; configuration + reporting evidence is included, and limitations are documented where observed.
-- **Conditional Access testing**: CA validation is shown via sign-in events and policy results; test policies may be created temporarily to generate clean failure evidence.
-
----
-
-## Repo structure
-- `docs/` → screenshots, diagrams, investigation write-ups  
-- `runbooks/` → operational runbooks (break-glass, CA troubleshooting, enrollment troubleshooting, etc.)  
-- `scripts/` → Graph + Intune automation scripts  
-- `scripts/remediation/` → proactive remediation detection/remediation pair
-
----
-
-## Screenshots index
-All redacted screenshots live in: [`docs/screenshots/`](docs/screenshots/)
+## Screenshots
+See `docs/screenshots/` for step-by-step evidence, including:
+- Conditional Access policy configuration + sign-in log evidence
+- Intune enrolled devices and compliance status
+- Configuration profile deployment status
+- App deployment status (7-Zip) and platform script assignment
+- Remediation status (device status + overview)
