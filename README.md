@@ -1,7 +1,10 @@
 # Modern Workplace & Identity Ops Lab (ContosoOpsLab)
 
+## Portfolio Website
+[sean-clarke.dev](https://sean-clarke.dev)
+
 ## Overview
-A hands-on lab that simulates real-world Microsoft 365 identity + endpoint operations for a small organization. Built to demonstrate day‑one skills for junior SysAdmin / Cloud Ops roles: Entra ID identity administration, Conditional Access security baselines, Intune endpoint management, monitoring, and PowerShell automation.
+A hands-on lab that simulates real-world Microsoft 365 identity + endpoint operations for a small organization. Built to demonstrate day-one skills for junior SysAdmin / Cloud Ops roles: Entra ID identity administration, Conditional Access security baselines, Intune endpoint management, monitoring, and PowerShell automation.
 
 ## Environment
 - **Tenant:** Microsoft 365 Developer tenant (E5 Developer / equivalent SKU)
@@ -55,7 +58,7 @@ A hands-on lab that simulates real-world Microsoft 365 identity + endpoint opera
   - **Windows Update rings**
     - Implemented Standard ring; IT Pilot ring also created (staged rollout pattern)
 - App + script deployment:
-  - Packaged and deployed **7‑Zip** as a Win32 app
+  - Packaged and deployed **7-Zip** as a Win32 app
   - Deployed a **PowerShell platform script** that writes a registry baseline key
 - **Proactive Remediation**:
   - Deployed Detect/Remediate pair to detect firewall drift and auto-re-enable firewall
@@ -75,11 +78,11 @@ A hands-on lab that simulates real-world Microsoft 365 identity + endpoint opera
 ## Implementation Notes (Accuracy / Deviations from Original Plan)
 This lab followed a “build guide” plan, but a few practical adjustments were made during implementation:
 
-- **Virtualization:** Host OS is **Windows 11 Home**, so **Hyper‑V was not available**. Endpoints were built using **Oracle VirtualBox** instead.
+- **Virtualization:** Host OS is **Windows 11 Home**, so **Hyper-V was not available**. Endpoints were built using **Oracle VirtualBox** instead.
 - **Windows ISO / OOBE:** Windows 11 Enterprise Evaluation ISO was used for VM installs. Some VM boot issues occurred when disk space was low or the ISO path changed; resolved by restoring the ISO and freeing disk space.
 - **Licensing:** Licenses were initially assigned per-user during user creation, then the lab standardized on **group-based licensing** via `SG-All-Employees`.
-- **BitLocker encryption settings:** “XTS‑AES 256” selection was not presented in the minimal BitLocker CSP picker. Encryption method settings were configured under Administrative Templates BitLocker settings where available. VM/vTPM limitations were documented.
-- **Update ring conflicts:** A conflict can appear if both “Standard” and “IT Pilot” rings target the same device. The intended approach is staged rollout targeting (Pilot → SG‑IT‑Admins, Standard → SG‑All‑Employees) with no overlap.
+- **BitLocker encryption settings:** “XTS-AES 256” selection was not presented in the minimal BitLocker CSP picker. Encryption method settings were configured under Administrative Templates BitLocker settings where available. VM/vTPM limitations were documented.
+- **Update ring conflicts:** A conflict can appear if both “Standard” and “IT Pilot” rings target the same device. The intended approach is staged rollout targeting (Pilot → SG-IT-Admins, Standard → SG-All-Employees) with no overlap.
 - **Conditional Access evidence:** Some client-app scenarios did not reliably generate the intended CA failure evidence in logs. A dedicated **CA test policy** was temporarily used to produce an unambiguous blocked sign-in event for documentation.
 - **Remediation scheduling:** Proactive Remediation reporting and execution cadence can lag in the portal. Evidence was captured once device status populated and “issue fixed/without issues” states appeared.
 
